@@ -1,0 +1,21 @@
+# OCI credentials (staged for Docker deploy builds)
+.oci_deploy/
+
+# Python
+__pycache__/
+*.pyc
+venv/
+
+# Terraform
+terraform/**/.terraform/
+terraform/**/*.tfstate
+terraform/**/*.tfstate.*
+terraform/**/.terraform.lock.hcl
+
+# IDE / local settings
+.idea/
+.vscode/
+.claude/
+
+# pytest
+.pytest_cache/

@@ -1,0 +1,107 @@
+GLOSSARY: dict[str, dict[str, str]] = {
+    "jackpot": {
+        "english": "jackpot",
+        "spanish-mx": "bote",
+        "polish": "jackpot",
+        "german": "Jackpot",
+        "portuguese-br": "jackpot",
+        "swedish": "jackpott",
+    },
+    "stake": {
+        "english": "stake",
+        "spanish-mx": "apuesta",
+        "polish": "stawka",
+        "german": "Einsatz",
+        "portuguese-br": "aposta",
+        "swedish": "insats",
+    },
+    "payout": {
+        "english": "payout",
+        "spanish-mx": "pago",
+        "polish": "wypłata",
+        "german": "Auszahlung",
+        "portuguese-br": "pagamento",
+        "swedish": "utbetalning",
+    },
+    "wager": {
+        "english": "wager",
+        "spanish-mx": "apuesta",
+        "polish": "zakład",
+        "german": "Wette",
+        "portuguese-br": "aposta",
+        "swedish": "vad",
+    },
+    "withdrawal": {
+        "english": "withdrawal",
+        "spanish-mx": "retiro",
+        "polish": "wypłata",
+        "german": "Abhebung",
+        "portuguese-br": "saque",
+        "swedish": "uttag",
+    },
+    "deposit": {
+        "english": "deposit",
+        "spanish-mx": "depósito",
+        "polish": "wpłata",
+        "german": "Einzahlung",
+        "portuguese-br": "depósito",
+        "swedish": "insättning",
+    },
+    "KYC": {
+        "english": "KYC",
+        "spanish-mx": "KYC",
+        "polish": "KYC",
+        "german": "KYC",
+        "portuguese-br": "KYC",
+        "swedish": "KYC",
+    },
+    "bonus": {
+        "english": "bonus",
+        "spanish-mx": "bono",
+        "polish": "bonus",
+        "german": "Bonus",
+        "portuguese-br": "bônus",
+        "swedish": "bonus",
+    },
+    "free spins": {
+        "english": "free spins",
+        "spanish-mx": "tiradas gratis",
+        "polish": "darmowe spiny",
+        "german": "Freispiele",
+        "portuguese-br": "rodadas grátis",
+        "swedish": "gratissnurr",
+    },
+    "wagering requirement": {
+        "english": "wagering requirement",
+        "spanish-mx": "requisito de apuesta",
+        "polish": "wymóg obrotu",
+        "german": "Umsatzanforderung",
+        "portuguese-br": "requisito de apostas",
+        "swedish": "omsättningskrav",
+    },
+    "cashout": {
+        "english": "cashout",
+        "spanish-mx": "cobro",
+        "polish": "wypłata",
+        "german": "Auszahlung",
+        "portuguese-br": "saque",
+        "swedish": "uttag",
+    },
+    "rollover": {
+        "english": "rollover",
+        "spanish-mx": "rollover",
+        "polish": "rollover",
+        "german": "Rollover",
+        "portuguese-br": "rollover",
+        "swedish": "rollover",
+    },
+}
+
+
+def get_glossary_for_pair(source_language: str, target_language: str) -> dict[str, str]:
+    """Return {source_term: target_term} for the given language pair."""
+    return {
+        translations[source_language]: translations[target_language]
+        for translations in GLOSSARY.values()
+        if source_language in translations and target_language in translations
+    }

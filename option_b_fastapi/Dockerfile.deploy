@@ -1,0 +1,18 @@
+FROM python:3.11-slim
+
+WORKDIR /app
+
+COPY option_b_fastapi/requirements.txt /app/requirements.txt
+RUN pip install --no-cache-dir -r requirements.txt
+
+COPY core/ /app/core/
+COPY option_b_fastapi/ /app/option_b_fastapi/
+
+# OCI API key auth — copied at build time, config rewritten for container path
+COPY .oci_deploy/config /root/.oci/config
+COPY .oci_deploy/oci_api_key.pem /root/.oci/oci_api_key.pem
+RUN chmod 600 /root/.oci/oci_api_key.pem
+
+EXPOSE 8000
+
+CMD ["uvicorn", "option_b_fastapi.main:app", "--host", "0.0.0.0", "--port", "8000"]
