@@ -13,9 +13,14 @@ Sync and streaming (SSE) translation.
 ## Quick Start (Option B — Local)
 
 ```bash
-# Set environment variables
+# Set environment variables on linux
 export OCI_COMPARTMENT_ID="ocid1.compartment.oc1....."
 export OCI_CONFIG_FILE="~/.oci/config"
+
+# Set environment variables on windows
+$env:OCI_COMPARTMENT_ID = "ocid1.compartment.oc1..aaaaaaaax6vcsmyeticn...."
+$env:OCI_CONFIG_FILE = "C:\Users\xxxx\.oci\config"
+
 
 # Install dependencies
 pip install -r option_b_fastapi/requirements.txt
@@ -143,10 +148,20 @@ You will need the following from your OCI tenancy:
 The deploy Dockerfile (`Dockerfile.deploy`) bakes in OCI API key credentials from a staging directory. First, prepare the credentials:
 
 ```bash
-# Stage OCI config with container-friendly key path
+# Stage OCI config with container-friendly key path on linux
 mkdir -p .oci_deploy
 sed 's|key_file=.*|key_file=/root/.oci/oci_api_key.pem|' ~/.oci/config > .oci_deploy/config
 cp ~/.oci/oci_api_key.pem .oci_deploy/oci_api_key.pem
+
+# Stage OCI config with container-friendly key path on windows
+New-Item -ItemType Directory -Force .oci_deploy | Out-Null
+
+(Get-Content "C:\Users\Pruvost\.oci\config") `
+  -replace 'key_file=.*', 'key_file=C:\Travail\Travail2025\Demos\SshKeys\NewAPIKeys\MyNewPrivateAPIKey.pem' `
+  | Set-Content .oci_deploy\config
+
+Copy-Item "C:\Travail\Travail2025\Demos\SshKeys\NewAPIKeys\MyNewPrivateAPIKey.pem" .oci_deploy\oci_api_key.pem
+
 ```
 
 Then build for AMD64 (OCI Container Instances use x86), tag, and push:
@@ -157,9 +172,11 @@ docker build --platform linux/amd64 -f option_b_fastapi/Dockerfile.deploy -t tra
 
 # Tag for OCIR
 docker tag translate-api:deploy <region-key>.ocir.io/<namespace>/translate-api:latest
+ex : docker tag translate-api:deploy fra.ocir.io/frsxwtjslf35/translate-api:latest
 
 # Push
 docker push <region-key>.ocir.io/<namespace>/translate-api:latest
+ex : docker push fra.ocir.io/frsxwtjslf35/translate-api:latest
 ```
 
 The `.oci_deploy/` directory is gitignored — credentials are never committed.
