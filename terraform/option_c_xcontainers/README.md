@@ -46,19 +46,8 @@ You can look at the variables and see :
   - ci_image_url
   - ci_registry_secret (ocid)
 
-## Scale or Autoscale
+## Scale
 
 Very simple just use this variable : ci_count (= number of container instances)
-
-For autoscaling we need to use two other components : 
-
-- an OCI Alarm that will for ex trigger a notification when the average cpu of the Container Instances are > value or < value
-- a function that will run due to the notification and that will use OCI SDK to update the variable ci_count to autoscale up and down.
-
-What is nice is that each time you autoscale then you have a log report in Oracle OCI Stacks Resource Manager and so the monitoring is simple !!!
-
-You will find these two components in 2 another github repo : 
- - [Function Repo](https://github.com/karthicgit/ocifunctions-sample/tree/main/CIautoscale)
- - [Alarm Repo](https://github.com/karthicgit/Terraformoci/tree/main/NotificationAlarm)
 
 Note : After running the Stack wait a little time to access to your backends using the Load Balancer. If you do not wait a little time you will have a "Bad Gateway" Message. This little time is needed by the LoadBalancer to validate Backends.
