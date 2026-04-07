@@ -12,6 +12,9 @@ terraform/**/*.tfstate
 terraform/**/*.tfstate.*
 terraform/**/.terraform.lock.hcl
 
+# Environment variables
+.env
+
 # IDE / local settings
 .idea/
 .vscode/
