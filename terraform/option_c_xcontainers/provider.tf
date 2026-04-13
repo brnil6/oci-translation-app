@@ -18,5 +18,7 @@ provider "oci" {
   #user_ocid        = var.user_ocid
   #fingerprint      = var.fingerprint
   #private_key_path = var.private_key_path
+
+  ###information needed for ORM
   region           = var.region
 }

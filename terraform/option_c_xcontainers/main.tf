@@ -14,6 +14,9 @@ module "containerinstance" {
   ci_registry_secret = var.ci_registry_secret
   ci_count = var.ci_count
   is_public_ip_assigned = var.is_public_ip_assigned
+  ci_compartment_id_env = var.ci_compartment_id_env
+  ci_genai_endpoint = var.ci_genai_endpoint
+  ci_default_model = var.ci_default_model
 }
 
 module "loadbalancer" {

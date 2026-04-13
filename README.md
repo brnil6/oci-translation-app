@@ -157,7 +157,7 @@ cp ~/.oci/oci_api_key.pem .oci_deploy/oci_api_key.pem
 New-Item -ItemType Directory -Force .oci_deploy | Out-Null
 
 (Get-Content "C:\Users\Pruvost\.oci\config") `
-  -replace 'key_file=.*', 'key_file=C:\Travail\Travail2025\Demos\SshKeys\NewAPIKeys\MyNewPrivateAPIKey.pem' `
+  -replace 'key_file=.*', 'key_file=/root/.oci/oci_api_key.pem' `
   | Set-Content .oci_deploy\config
 
 Copy-Item "C:\Travail\Travail2025\Demos\SshKeys\NewAPIKeys\MyNewPrivateAPIKey.pem" .oci_deploy\oci_api_key.pem
@@ -169,8 +169,9 @@ Then build for AMD64 (OCI Container Instances use x86), tag, and push:
 ```bash
 # Build for AMD64
 docker build --platform linux/amd64 -f option_b_fastapi/Dockerfile.deploy -t translate-api:deploy .
+ex (no need tag after here) : docker build --platform linux/amd64 -f option_b_fastapi/Dockerfile.deploy -t cdg.ocir.io/frsxwtjslf35/translate-api:2.0.0 .
 
-# Tag for OCIR
+# Tag for OCIR if needed
 docker tag translate-api:deploy <region-key>.ocir.io/<namespace>/translate-api:latest
 ex : docker tag translate-api:deploy fra.ocir.io/frsxwtjslf35/translate-api:latest
 

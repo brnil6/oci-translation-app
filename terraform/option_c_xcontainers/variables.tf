@@ -1,23 +1,24 @@
-### These information are needed only outside of OCI Terraform Stack Manager
-# variable "tenancy_ocid" {
+### Start : These information are needed only outside of OCI Terraform Stack Manager
+#variable "tenancy_ocid" {
 #     description = "The OCI Tenancy ocid"
 #     type        = string
-# }
+#}
 
-# variable "user_ocid" {
+#variable "user_ocid" {
 #     description = "The OCI User ocid"
 #     type        = string
-# }
+#}
 
-# variable "fingerprint" {
+#variable "fingerprint" {
 #     description = "The Fingerprint of the OCI API Key"
 #     type        = string
-# }
+#}
 
-# variable "private_key_path" {
+#variable "private_key_path" {
 #     description = "The Path of the OCI API Key"
 #     type        = string
-# }
+#}
+### End : These information are needed only outside of OCI Terraform Stack Manager
 
 variable "region" {
     description = "The OCI region"
@@ -48,7 +49,7 @@ variable "public_subnet_ocid" {
 variable "ci_name" {
     description = "The OCI Container Instance Name"
     type        = string
-    default     = "CI_NAME"
+    default     = "CI_TRANSLATOR"
 }
 
 variable "ci_restart_policy" {
@@ -100,6 +101,21 @@ variable "ci_registry_secret" {
 variable "ci_count" {
     description = "The OCI Container Instance Count Number"
     type        = number
+}
+
+variable "ci_compartment_id_env" {
+  type        = string
+  description = "OCI_COMPARTMENT_ID passed to the container for GenAI calls"
+}
+
+variable "ci_genai_endpoint" {
+  type    = string
+  default = "https://inference.generativeai.eu-frankfurt-1.oci.oraclecloud.com"
+}
+
+variable "ci_default_model" {
+  type    = string
+  default = "cohere.command-a-03-2025"
 }
 
 variable "load_balancer_shape_details_maximum_bandwidth_in_mbps" {

@@ -76,6 +76,21 @@ variable "is_public_ip_assigned" {
     type        = bool
 }
 
+variable "ci_compartment_id_env" {
+  type        = string
+  description = "OCI_COMPARTMENT_ID passed to the container for GenAI calls"
+}
+
+variable "ci_genai_endpoint" {
+  type    = string
+  default = "https://inference.generativeai.eu-frankfurt-1.oci.oraclecloud.com"
+}
+
+variable "ci_default_model" {
+  type    = string
+  default = "cohere.command-a-03-2025"
+}
+
 #Get Availaibility Domains. We use only first AD. 
 #TODO Later (Add logic for multi Ads Domain)
 data "oci_identity_availability_domains" "ADs" {
@@ -104,6 +119,13 @@ resource "oci_container_instances_container_instance" "this" {
   containers {
     display_name          = "${var.ci_container_name}${count.index}"
     image_url             = var.ci_image_url
+
+    environment_variables = {
+      OCI_COMPARTMENT_ID = var.ci_compartment_id_env
+      OCI_GENAI_ENDPOINT = var.ci_genai_endpoint
+      OCI_DEFAULT_MODEL  = var.ci_default_model
+      OCI_AUTH           = "api_key"
+    }
   }
 
   image_pull_secrets {

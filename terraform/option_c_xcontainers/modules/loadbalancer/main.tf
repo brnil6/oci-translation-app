@@ -28,7 +28,7 @@ variable "private_ips" {
 variable "lb_name" {
     description = "The OCI LB Name"
     type        = string
-    default     = "CI_FLEX_LB"
+    default     = "CI_TRANSLATOR_LB"
 }
 
 
