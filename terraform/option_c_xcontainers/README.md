@@ -6,7 +6,7 @@ This project has been designed to run with Oracle OCI Stacks Resource Manager. N
 
 Use the button below to open OCI Resource Manager with the packaged stack archive for this option:
 
-[![Deploy to Oracle Cloud](https://oci-resourcemanager-plugin.plugins.oci.oraclecloud.com/latest/deploy-to-oracle-cloud.svg)](https://cloud.oracle.com/resourcemanager/stacks/create?zipUrl=https://raw.githubusercontent.com/brnil6/oci-translation-app/devkris/terraform/option_c_xcontainers/ocitranslator.zip?v=3)
+[![Deploy to Oracle Cloud](https://oci-resourcemanager-plugin.plugins.oci.oraclecloud.com/latest/deploy-to-oracle-cloud.svg)](https://cloud.oracle.com/resourcemanager/stacks/create?zipUrl=https://github.com/brnil6/oci-translation-app/releases/download/v1.0.0/ocitranslator.zip)
 
 The button uses the archive published at `terraform/option_c_xcontainers/ocitranslator.zip` on the `main` branch.
 
