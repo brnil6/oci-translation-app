@@ -17,7 +17,7 @@ variable "private_subnet_ocid" {
 variable "ci_name" {
     description = "The OCI Container Instance Name"
     type        = string
-    default     = "CI_NAME"
+    default     = "CI_TRANSLATOR"
 }
 
 variable "ci_restart_policy" {
@@ -53,7 +53,7 @@ variable "ci_memory" {
 variable "ci_container_name" {
     description = "The OCI Container Name"
     type        = string
-    default     = "CI_CONTAINER_NAME"
+    default     = "CI_TRANSLATOR"
 }
 
 variable "ci_image_url" {
