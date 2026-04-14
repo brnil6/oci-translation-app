@@ -10,4 +10,4 @@ COPY option_b_fastapi/ /app/option_b_fastapi/
 
 EXPOSE 8000
 
-CMD ["uvicorn", "option_b_fastapi.main:app", "--host", "0.0.0.0", "--port", "8000"]
+CMD ["sh", "-c", "uvicorn option_b_fastapi.main:app --host 0.0.0.0 --port 8000 --workers ${UVICORN_WORKERS:-2}"]

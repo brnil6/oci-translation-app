@@ -10,8 +10,8 @@ export const options = {
   scenarios: {
     default: {
       executor: 'ramping-vus',
-      gracefulRampDown: '60s',
-      gracefulStop: '60s',
+      gracefulRampDown: '90s',
+      gracefulStop: '90s',
       stages: [
         { duration: __ENV.RAMP_UP_DURATION || '20s', target: Number(__ENV.TARGET_VUS || 20) },
         { duration: __ENV.STEADY_DURATION || '60s', target: Number(__ENV.TARGET_VUS || 20) },
@@ -36,7 +36,7 @@ const params = {
   headers: {
     'Content-Type': 'application/json',
   },
-  timeout: __ENV.TIMEOUT || '60s',
+  timeout: __ENV.TIMEOUT || '90',
 };
 
 function truncate(value, maxLength = 500) {
@@ -78,5 +78,5 @@ export default function () {
     console.log(`[k6-failure] ${formatFailure(response)}`);
   }
 
-  sleep(Number(__ENV.SLEEP_SECONDS || 1));
+  sleep(Number(__ENV.SLEEP_SECONDS || 2));
 }

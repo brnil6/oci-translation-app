@@ -6,7 +6,7 @@ from fastapi import FastAPI, HTTPException
 from fastapi.responses import HTMLResponse, StreamingResponse
 
 from core.models import TranslateRequest, TranslateResponse
-from core.translator import translate_stream, translate_sync
+from core.translator import translate_stream, translate_sync, translate_async
 
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
@@ -104,11 +104,16 @@ def welcome():
 
 
 @app.post("/translate", response_model=TranslateResponse)
-def translate(req: TranslateRequest):
+#def translate(req: TranslateRequest):
+async def translate(req: TranslateRequest):
     try:
-        return translate_sync(req)
+        #return translate_sync(req)
+        return await translate_async(req)
+    except HTTPException:
+        raise
     except Exception as e:
-        logger.exception("Sync translation failed")
+        #logger.exception("Sync translation failed")
+        logger.exception("Async translation failed")
         raise HTTPException(status_code=500, detail=str(e))
 
 

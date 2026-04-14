@@ -15,4 +15,4 @@ RUN chmod 600 /root/.oci/oci_api_key.pem
 
 EXPOSE 8000
 
-CMD ["uvicorn", "option_b_fastapi.main:app", "--host", "0.0.0.0", "--port", "8000"]
+CMD ["sh", "-c", "uvicorn option_b_fastapi.main:app --host 0.0.0.0 --port 8000 --workers ${UVICORN_WORKERS:-8}"]

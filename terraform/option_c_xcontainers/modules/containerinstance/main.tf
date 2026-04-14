@@ -41,13 +41,13 @@ variable "ci_shape" {
 variable "ci_ocpus" {
     description = "The OCI Container Instance Ocpu Number"
     type        = number
-    default     = 1
+    default     = 2
 }
 
 variable "ci_memory" {
     description = "The OCI Container Instance Memory GB Number"
     type        = number
-    default     = 2
+    default     = 4
 }
 
 variable "ci_container_name" {

@@ -67,7 +67,7 @@ variable "ci_state" {
 variable "ci_shape" {
     description = "The OCI Container Instance Shape"
     type        = string
-    default     = "CI.Standard.E4.Flex"
+    default     = "CI.Standard.E5.Flex"
 }
 
 variable "ci_ocpus" {

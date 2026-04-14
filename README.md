@@ -217,6 +217,7 @@ curl -X POST http://<load-balancer-ip>/translate \
     "target_language": "german"
   }'
 ```
+Note : Remember that you must wait a few seconds to allow the LB to discover the backends. If you do a request just after the stack apply you can get "502 Bad Gateway". Just wait then... 
 
 ### Updating the container
 
@@ -242,6 +243,22 @@ oci container-instances container-instance restart \
 | OCIR image storage | | negligible |
 
 **Fixed infrastructure: ~$37/month** plus GenAI usage. For light usage (a few hundred translations/day), GenAI adds a few dollars/month. To save costs when not in use, tear down with `terraform destroy` and redeploy when needed.
+
+## Deploying Option C — x Container Instances + Load Balancer
+Do the same step for building the docker image and pushing it to OCIR
+Look at the Readme in the option_c_xcontainers. Click on Deploy to Oracle Cloud then you will create a terraform stack that will deploy x CI automatically. The CI are in a private subnet but you can reach them via a LB in a public subnet.
+
+Note that you need before :
+- a VCN with a public and a private subnet (Open port 8000 on the 2 subnets with security rules
+). Use the VCN wizard to get one quickly.
+- a secret in Vault for being authorize to get image from registry. 
+The secret should use the username and token that you use to push to OCIR. Ex :
+{
+"username": "My_user",
+"password": "My_Password"
+}
+
+After deploying do the same test than Option B to check that everything is OK.
 
 ## Docker (Local Development)
 

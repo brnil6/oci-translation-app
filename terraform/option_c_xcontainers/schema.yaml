@@ -80,14 +80,14 @@ variables:
     title: "Container Instance Display Name"
     description: "Base display name used for the container instances."
     type: string
-    default: "CI_NAME"
+    default: "CI_TRANSLATOR"
     required: true
 
   ci_container_name:
     title: "Container Name Prefix"
     description: "Prefix used for each container display name."
     type: string
-    default: "CI_CONTAINER_NAME"
+    default: "CI_CONT_TRANSLATOR"
     required: true
 
   ci_image_url:
@@ -159,7 +159,7 @@ variables:
     title: "Load Balancer Name"
     description: "Display name of the public load balancer."
     type: string
-    default: "CI_FLEX_LB"
+    default: "CI_TRANSLATOR_LB"
     required: true
 
   load_balancer_shape_details_minimum_bandwidth_in_mbps:

@@ -3,6 +3,7 @@ from __future__ import annotations
 import json
 import logging
 import time
+from functools import lru_cache
 from typing import Generator
 
 logger = logging.getLogger(__name__)
@@ -84,6 +85,7 @@ def _build_chat_detail(req: TranslateRequest, *, stream: bool = False):
     )
 
 
+@lru_cache(maxsize=1)
 def _get_client():
     """Create an OCI GenerativeAiInferenceClient."""
     import oci.generative_ai_inference
@@ -109,17 +111,49 @@ def _extract_translated_text(chat_resp, fmt: str) -> str:
     return chat_resp.choices[0].message.content[0].text.strip()
 
 
+@lru_cache(maxsize=16)
+def _cached_api_format(model_id: str) -> str:
+    return _api_format(model_id)
+
+
+@lru_cache(maxsize=64)
+def _cached_system_prompt(source_language: str, target_language: str) -> str:
+    return build_system_prompt(source_language, target_language)
+
+
 def translate_sync(req: TranslateRequest) -> TranslateResponse:
     """Synchronous translation using OCI GenAI Python SDK."""
+    # Resolve format and system prompt before entering timed section —
+    # both are pure functions of stable inputs and benefit from caching.
+    fmt = _cached_api_format(req.model_id)
+    _ = _cached_system_prompt(req.source_language, req.target_language)  # warm cache
+
     client = _get_client()
     chat_detail = _build_chat_detail(req, stream=False)
 
     start = time.perf_counter()
-    response = client.chat(chat_detail)
-    elapsed_ms = (time.perf_counter() - start) * 1000
+    try:
+        response = client.chat(chat_detail)
+        elapsed_ms = (time.perf_counter() - start) * 1000
+    except Exception as exc:
+        elapsed_ms = (time.perf_counter() - start) * 1000
+        logger.exception(
+            "GenAI sync call failed model_id=%s elapsed_ms=%.2f status=%s code=%s opc_request_id=%s",
+            req.model_id,
+            elapsed_ms,
+            getattr(exc, "status", None),
+            getattr(exc, "code", None),
+            getattr(exc, "opc_request_id", None),
+        )
+        raise
 
-    fmt = _api_format(req.model_id)
     translated = _extract_translated_text(response.data.chat_response, fmt)
+
+    logger.info(
+        "GenAI sync call succeeded model_id=%s elapsed_ms=%.2f",
+        req.model_id,
+        elapsed_ms,
+    )
 
     return TranslateResponse(
         translated_text=translated,
@@ -128,6 +162,12 @@ def translate_sync(req: TranslateRequest) -> TranslateResponse:
         model_id=req.model_id,
         latency_ms=round(elapsed_ms, 2),
     )
+
+
+async def translate_async(req: TranslateRequest) -> TranslateResponse:
+    """Async wrapper around translate_sync — runs in a thread pool to avoid blocking the event loop."""
+    import asyncio
+    return await asyncio.to_thread(translate_sync, req)
 
 
 def translate_stream(req: TranslateRequest) -> Generator[str, None, None]:
