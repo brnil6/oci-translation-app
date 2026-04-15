@@ -2,7 +2,7 @@ import http from 'k6/http';
 import { check, sleep } from 'k6';
 import { Counter } from 'k6/metrics';
 
-const BASE_URL = __ENV.BASE_URL || 'http://92.5.118.227:8000';
+const BASE_URL = __ENV.BASE_URL || 'http://92.5.61.234:8000';
 const ENDPOINT = `${BASE_URL}/translate`;
 const errorCounter = new Counter('errors');
 
@@ -36,7 +36,7 @@ const params = {
   headers: {
     'Content-Type': 'application/json',
   },
-  timeout: __ENV.TIMEOUT || '90',
+  timeout: __ENV.TIMEOUT || '90s',
 };
 
 function truncate(value, maxLength = 500) {

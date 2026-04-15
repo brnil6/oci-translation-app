@@ -91,6 +91,32 @@ variable "ci_default_model" {
   default = "cohere.command-a-03-2025"
 }
 
+variable "tenancy_ocid" {
+  type        = string
+  description = "OCI tenancy OCID passed to the container runtime"
+}
+
+variable "user_ocid" {
+  type        = string
+  description = "OCI user OCID passed to the container runtime"
+}
+
+variable "fingerprint" {
+  type        = string
+  description = "OCI API key fingerprint passed to the container runtime"
+}
+
+variable "private_api_key" {
+  type        = string
+  description = "OCI API private key content passed to the container runtime"
+  sensitive   = true
+}
+
+variable "region" {
+  type        = string
+  description = "OCI region passed to the container runtime"
+}
+
 #Get Availaibility Domains. We use only first AD. 
 #TODO Later (Add logic for multi Ads Domain)
 data "oci_identity_availability_domains" "ADs" {
@@ -121,10 +147,15 @@ resource "oci_container_instances_container_instance" "this" {
     image_url             = var.ci_image_url
 
     environment_variables = {
-      OCI_COMPARTMENT_ID = var.ci_compartment_id_env
-      OCI_GENAI_ENDPOINT = var.ci_genai_endpoint
-      OCI_DEFAULT_MODEL  = var.ci_default_model
-      OCI_AUTH           = "api_key"
+      OCI_COMPARTMENT_ID      = var.ci_compartment_id_env
+      OCI_GENAI_ENDPOINT      = var.ci_genai_endpoint
+      OCI_DEFAULT_MODEL       = var.ci_default_model
+      OCI_AUTH                = "api_key"
+      OCI_PRIVATE_KEY_CONTENT = var.private_api_key
+      OCI_TENANCY             = var.tenancy_ocid
+      OCI_USER                = var.user_ocid
+      OCI_FINGERPRINT         = var.fingerprint
+      OCI_REGION              = var.region
     }
   }
 

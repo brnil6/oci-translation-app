@@ -145,6 +145,8 @@ You will need the following from your OCI tenancy:
 
 ### Step 1 — Build and push the Docker image
 
+OLD STEP NOT USED ONLY FOR MEMORY : here OCI config file and private api key deployed in the docker image is a security break. Anyone who have acces to the image can get the credentials. So we decided to build the config file and the api key file at start from env variables. Why ? because oci langchain cannot use directly env variables today (this is a limitation).   
+
 The deploy Dockerfile (`Dockerfile.deploy`) bakes in OCI API key credentials from a staging directory. First, prepare the credentials:
 
 ```bash
@@ -172,15 +174,17 @@ docker build --platform linux/amd64 -f option_b_fastapi/Dockerfile.deploy -t tra
 ex (no need tag after here) : docker build --platform linux/amd64 -f option_b_fastapi/Dockerfile.deploy -t cdg.ocir.io/frsxwtjslf35/translate-api:2.0.0 .
 
 # Tag for OCIR if needed
+# Just fyi here but never use tag latest if you can avoid it (it is a best practise).
 docker tag translate-api:deploy <region-key>.ocir.io/<namespace>/translate-api:latest
 ex : docker tag translate-api:deploy fra.ocir.io/frsxwtjslf35/translate-api:latest
 
 # Push
 docker push <region-key>.ocir.io/<namespace>/translate-api:latest
 ex : docker push fra.ocir.io/frsxwtjslf35/translate-api:latest
+or ex without latest : docker push cdg.ocir.io/frsxwtjslf35/translate-api:2.0.0 .
 ```
 
-The `.oci_deploy/` directory is gitignored — credentials are never committed.
+The `.oci_deploy/` directory is gitignored — credentials are never committed. [OLD VERSION : This directory is useless now]
 
 ### Step 2 — Deploy with Terraform
 

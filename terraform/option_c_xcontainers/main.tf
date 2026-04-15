@@ -17,6 +17,11 @@ module "containerinstance" {
   ci_compartment_id_env = var.ci_compartment_id_env
   ci_genai_endpoint = var.ci_genai_endpoint
   ci_default_model = var.ci_default_model
+  tenancy_ocid = var.tenancy_ocid
+  user_ocid = var.user_ocid
+  fingerprint = var.fingerprint
+  private_api_key = var.private_api_key
+  region = var.region
 }
 
 module "loadbalancer" {
