@@ -4,13 +4,21 @@ Translates between multiple language pairs using OCI GenAI models. Built for onl
 
 ## Deployment Options
 
-### Option A — OCI Functions (Serverless)
+### Option A [DEPRECATED - DO NOT USED] — OCI Functions (Serverless)
 Sync-only translation behind OCI API Gateway.
+This code was not updated to follow all new features and will probably failed if used.
 
 ### Option B — FastAPI (Docker)
 Sync and streaming (SSE) translation.
 
 ## Quick Start (Option B — Local)
+
+Prerequisites : 
+1) Your OCI user/group should be authorized to use all the services needed on OCI (Container Instances, Load Balancer, Vault, Stack Resources Manager, ...)
+
+2) Install OCI CLI and configure it for your Tenant. [https://docs.oracle.com/en-us/iaas/Content/API/SDKDocs/cliinstall.htm]
+
+3) Create a bucket with the name bucket-glossary et in this bucket upload a file named glossary.json (look at the exemple in this project). Be carefull do not make error with json so use a json validator before uploading the file (ex : https://jsonformatter.curiousconcept.com/)
 
 ```bash
 # Set environment variables on linux
@@ -66,6 +74,7 @@ curl -N -X POST http://localhost:8000/translate/stream \
 | `TEMPERATURE` | `0.0` | Sampling temperature |
 | `TOP_P` | `0.8` | Top-p sampling |
 | `OCI_AUTH` | `auto` | Set to `api_key` to skip Resource Principals and use `~/.oci/config` directly |
+And so on...
 
 ## Supported Language Pairs
 `english`, `german`, `spanish-mx`, `polish`, `portuguese-br`, `swedish`
@@ -89,13 +98,18 @@ pip install pytest
 pytest tests/
 ```
 
+Set the variable for having real call to OCI Bucket to get the glossary : export RUN_OCI_INTEGRATION_TESTS=1 [Linux] or $env:RUN_OCI_INTEGRATION_TESTS="1" [Windows]
+
+You can run the test with : python.exe -m pytest -q
+
 The test suite validates:
 
 - **Every allowed language pair** in both directions (22 parametrized cases covering all 11 pairs)
 - **Invalid pair rejection** — pairs not in `ALLOWED_PAIRS` (e.g. Polish to Portuguese-BR) are rejected with a clear error
 - **Input validation** — unsupported languages, same source/target, empty text
 - **OCI chat body construction** — correct API format selection (GENERIC for Llama, COHERE for Command R/R+, COHEREV2 for Command A), stream flag, system/user message structure
-- **Sync translation** — end-to-end with mocked OCI client
+- **Sync translation** — end-to-end with mocked OCI client or real call
+- **Glossary use** - check that glossary is downloaded from OCI Bucket and used
 
 ## Adding a Language Pair
 
@@ -111,13 +125,8 @@ Three files need updating:
    }
    ```
 
-2. **`core/glossary.py`** — Add a translation for the new language to each term in `GLOSSARY`:
-   ```python
-   "jackpot": {
-       ...,
-       "italian": "jackpot",
-   },
-   ```
+2. **`core/glossary.json`** — is never used locally an must be uploaded to the OCI Bucket. The glossary is refreshed every 5 minutes from the OCI Bucket.
+   
 
 3. **`tests/test_models.py`** — Add the new pair (both directions) to the `test_valid_language_pair` parametrize list, and remove it from `test_invalid_language_pair_raises` if it was previously listed there.
 
@@ -127,51 +136,18 @@ Always-on container (no cold starts) behind a flexible load balancer. The contai
 
 ### Prerequisites
 
-- **OCI CLI** configured locally (`~/.oci/config`) — Terraform uses this to provision resources, and the API key is baked into the deploy image
-- **Docker** running locally (Colima or Docker Desktop)
-- **Terraform** installed
-- **OCIR access** — logged into OCI Container Registry (`docker login <region-key>.ocir.io`)
-- **OCIR repo** — create the repo before first push: `oci artifacts container repository create --compartment-id <compartment-ocid> --display-name translate-api`
-- **IAM permissions** — your user/group must be able to create container instances and load balancers in the target compartment
-
-You will need the following from your OCI tenancy:
-
-| Value | Where to find it |
-|---|---|
-| Compartment OCID | Identity > Compartments |
-| Subnet OCID | Networking > VCNs > Subnets (public subnet with ingress on ports 443 and 8000) |
-| OCIR namespace | Container Registry > Settings, or run `oci os ns get` |
-| Region key | e.g. `fra` for eu-frankfurt-1, `lhr` for uk-london-1 |
+- **Docker** running locally (Colima or Docker Desktop or Rancher Desktop or .)
 
 ### Step 1 — Build and push the Docker image
 
-OLD STEP NOT USED ONLY FOR MEMORY : here OCI config file and private api key deployed in the docker image is a security break. Anyone who have acces to the image can get the credentials. So we decided to build the config file and the api key file at start from env variables. Why ? because oci langchain cannot use directly env variables today (this is a limitation).   
-
-The deploy Dockerfile (`Dockerfile.deploy`) bakes in OCI API key credentials from a staging directory. First, prepare the credentials:
-
-```bash
-# Stage OCI config with container-friendly key path on linux
-mkdir -p .oci_deploy
-sed 's|key_file=.*|key_file=/root/.oci/oci_api_key.pem|' ~/.oci/config > .oci_deploy/config
-cp ~/.oci/oci_api_key.pem .oci_deploy/oci_api_key.pem
-
-# Stage OCI config with container-friendly key path on windows
-New-Item -ItemType Directory -Force .oci_deploy | Out-Null
-
-(Get-Content "C:\Users\Pruvost\.oci\config") `
-  -replace 'key_file=.*', 'key_file=/root/.oci/oci_api_key.pem' `
-  | Set-Content .oci_deploy\config
-
-Copy-Item "C:\Travail\Travail2025\Demos\SshKeys\NewAPIKeys\MyNewPrivateAPIKey.pem" .oci_deploy\oci_api_key.pem
-
-```
+The deploy Dockerfile (`Dockerfile.deploy`) will be used. Note that no security information is backed into this image. The security information are built when the container starts.
 
 Then build for AMD64 (OCI Container Instances use x86), tag, and push:
 
 ```bash
 # Build for AMD64
 docker build --platform linux/amd64 -f option_b_fastapi/Dockerfile.deploy -t translate-api:deploy .
-ex (no need tag after here) : docker build --platform linux/amd64 -f option_b_fastapi/Dockerfile.deploy -t cdg.ocir.io/frsxwtjslf35/translate-api:2.0.0 .
+ex (no need tag after here) : docker build --platform linux/amd64 -f option_b_fastapi/Dockerfile.deploy -t cdg.ocir.io/frsxwtjslf35/translate-api:8.0.0 .
 
 # Tag for OCIR if needed
 # Just fyi here but never use tag latest if you can avoid it (it is a best practise).
@@ -181,32 +157,12 @@ ex : docker tag translate-api:deploy fra.ocir.io/frsxwtjslf35/translate-api:late
 # Push
 docker push <region-key>.ocir.io/<namespace>/translate-api:latest
 ex : docker push fra.ocir.io/frsxwtjslf35/translate-api:latest
-or ex without latest : docker push cdg.ocir.io/frsxwtjslf35/translate-api:2.0.0 .
+or ex without latest : docker push cdg.ocir.io/frsxwtjslf35/translate-api:2.0.0
 ```
-
-The `.oci_deploy/` directory is gitignored — credentials are never committed. [OLD VERSION : This directory is useless now]
 
 ### Step 2 — Deploy with Terraform
 
-```bash
-cd terraform/option_b_container
-terraform init
-terraform apply \
-  -var compartment_id="ocid1.compartment.oc1....." \
-  -var subnet_id="ocid1.subnet.oc1....." \
-  -var container_image="<region-key>.ocir.io/<namespace>/translate-api:latest" \
-  -var oci_compartment_id_env="ocid1.compartment.oc1....."
-```
-
-Optional variables:
-
-| Variable | Default | Description |
-|---|---|---|
-| `container_count` | `1` | Number of container instances (spread across ADs) |
-| `container_ocpus` | `1` | OCPUs per instance |
-| `container_memory_gb` | `2` | Memory (GB) per instance |
-| `oci_default_model` | `cohere.command-a-03-2025` | Default model passed to the container |
-| `oci_genai_endpoint` | Frankfurt endpoint | GenAI inference endpoint |
+Go to terraform/option_c_xcontainers and follow the Readme
 
 ### Step 3 — Verify
 
@@ -225,66 +181,18 @@ Note : Remember that you must wait a few seconds to allow the LB to discover the
 
 ### Updating the container
 
-After code changes, rebuild, push, then restart the container instance:
+After code changes, rebuild, push, then update the variables of the terraform stack and do an apply again.
 
-```bash
-docker build --platform linux/amd64 -f option_b_fastapi/Dockerfile.deploy -t translate-api:deploy .
-docker tag translate-api:deploy <region-key>.ocir.io/<namespace>/translate-api:latest
-docker push <region-key>.ocir.io/<namespace>/translate-api:latest
-
-# Restart picks up the new :latest image
-oci container-instances container-instance restart \
-  --container-instance-id <instance-ocid>
-```
-
-## Estimated Costs (Option B)
+## Estimated Costs (Go to Oracle Cloud Estimator to check pricing as here it can be wrong)
 
 | Resource | Spec | ~Monthly (USD) |
 |---|---|---|
-| Container Instance | 1 OCPU, 2 GB RAM, always-on | ~$27 |
+| Container Instance | 1 OCPU, 2 GB RAM, always-on | ~$27 | [*2 for High Availability]
 | Flexible Load Balancer | 10 Mbps minimum | ~$10 |
 | GenAI inference (Command A) | per request | ~$0.0015/1K input tokens, ~$0.007/1K output tokens |
 | OCIR image storage | | negligible |
+| May be API Gateway to add security later 
 
 **Fixed infrastructure: ~$37/month** plus GenAI usage. For light usage (a few hundred translations/day), GenAI adds a few dollars/month. To save costs when not in use, tear down with `terraform destroy` and redeploy when needed.
 
-## Deploying Option C — x Container Instances + Load Balancer
-Do the same step for building the docker image and pushing it to OCIR
-Look at the Readme in the option_c_xcontainers. Click on Deploy to Oracle Cloud then you will create a terraform stack that will deploy x CI automatically. The CI are in a private subnet but you can reach them via a LB in a public subnet.
-
-Note that you need before :
-- a VCN with a public and a private subnet (Open port 8000 on the 2 subnets with security rules
-). Use the VCN wizard to get one quickly.
-- a secret in Vault for being authorize to get image from registry. 
-The secret should use the username and token that you use to push to OCIR. Ex :
-{
-"username": "My_user",
-"password": "My_Password"
-}
-
-After deploying do the same test than Option B to check that everything is OK.
-
-## Docker (Local Development)
-
-For local testing without Terraform:
-
-```bash
-docker build -f option_b_fastapi/Dockerfile -t translate-api .
-docker run -p 8000:8000 \
-  -v ~/.oci:/root/.oci:ro \
-  -e OCI_COMPARTMENT_ID="..." \
-  translate-api
-```
-
-## Terraform — Option A (OCI Functions + API Gateway)
-
-Serverless alternative (has cold starts):
-
-```bash
-cd terraform/option_a_functions
-terraform init
-terraform apply \
-  -var compartment_id="..." \
-  -var function_id="..." \
-  -var subnet_id="..."
-```
+Note : Option_b_container is DEPRECATED. Do not use.

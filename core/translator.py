@@ -18,6 +18,7 @@ from core.config import (
 )
 from core.models import TranslateRequest, TranslateResponse
 from core.prompt import build_system_prompt, build_user_prompt
+from core.glossary import get_glossary_for_pair
 
 
 def _api_format(model_id: str) -> str:
@@ -121,8 +122,40 @@ def _cached_system_prompt(source_language: str, target_language: str) -> str:
     return build_system_prompt(source_language, target_language)
 
 
+def _translate_exact_glossary_match(req: TranslateRequest) -> str | None:
+    glossary = get_glossary_for_pair(req.source_language, req.target_language)
+    source_text = req.text.strip()
+
+    if source_text in glossary:
+        return glossary[source_text]
+
+    source_text_key = source_text.casefold()
+    for source_term, target_term in glossary.items():
+        if source_term.casefold() == source_text_key:
+            return target_term
+
+    return None
+
+
 def translate_sync(req: TranslateRequest) -> TranslateResponse:
     """Synchronous translation using OCI GenAI Python SDK."""
+    start = time.perf_counter()
+    glossary_match = _translate_exact_glossary_match(req)
+    if glossary_match is not None:
+        elapsed_ms = (time.perf_counter() - start) * 1000
+        logger.info(
+            "Glossary exact match model_id=%s elapsed_ms=%.2f",
+            req.model_id,
+            elapsed_ms,
+        )
+        return TranslateResponse(
+            translated_text=glossary_match,
+            source_language=req.source_language,
+            target_language=req.target_language,
+            model_id=req.model_id,
+            latency_ms=round(elapsed_ms, 2),
+        )
+
     # Resolve format and system prompt before entering timed section —
     # both are pure functions of stable inputs and benefit from caching.
     fmt = _cached_api_format(req.model_id)
@@ -131,7 +164,6 @@ def translate_sync(req: TranslateRequest) -> TranslateResponse:
     client = _get_client()
     chat_detail = _build_chat_detail(req, stream=False)
 
-    start = time.perf_counter()
     try:
         response = client.chat(chat_detail)
         elapsed_ms = (time.perf_counter() - start) * 1000

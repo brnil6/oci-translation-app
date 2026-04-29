@@ -3,7 +3,22 @@ from unittest.mock import MagicMock, patch
 import pytest
 
 from core.models import TranslateRequest
-from core.translator import _build_chat_detail, translate_sync
+from core.translator import _build_chat_detail, _cached_system_prompt, translate_sync
+
+
+@pytest.fixture(autouse=True)
+def mock_glossary(monkeypatch):
+    monkeypatch.setattr(
+        "core.prompt.get_glossary_for_pair",
+        lambda source_language, target_language: {},
+    )
+    monkeypatch.setattr(
+        "core.translator.get_glossary_for_pair",
+        lambda source_language, target_language: {},
+    )
+    _cached_system_prompt.cache_clear()
+    yield
+    _cached_system_prompt.cache_clear()
 
 
 class TestBuildChatDetail:
@@ -85,21 +100,49 @@ class TestTranslateSync:
         assert result.latency_ms > 0
 
     @patch("core.translator._get_client")
-    def test_sync_returns_response_generic(self, mock_get_client):
+    def test_sync_returns_response_generic(self, mock_get_client, monkeypatch):
         mock_client = MagicMock()
         mock_get_client.return_value = mock_client
 
         mock_result = MagicMock()
         mock_result.data.chat_response.choices = [
-            MagicMock(message=MagicMock(content=[MagicMock(text="Hola mundo")]))
+            MagicMock(message=MagicMock(content=[MagicMock(text="bote")]))
         ]
         mock_client.chat.return_value = mock_result
+        monkeypatch.setattr(
+            "core.prompt.get_glossary_for_pair",
+            lambda source_language, target_language: {"jackpot": "bote"},
+        )
 
         req = TranslateRequest(
-            text="Hello world",
+            text="win the jackpot",
             source_language="english",
             target_language="spanish-mx",
             model_id="meta.llama-3.3-70b-instruct",
         )
         result = translate_sync(req)
-        assert result.translated_text == "Hola mundo"
+        assert result.translated_text == "bote"
+
+        chat_detail = mock_client.chat.call_args.args[0]
+        system_prompt = chat_detail.chat_request.messages[0].content[0].text
+        assert "jackpot" in system_prompt
+        assert "bote" in system_prompt
+
+    @patch("core.translator._get_client")
+    def test_sync_returns_exact_glossary_match_without_genai(
+        self, mock_get_client, monkeypatch
+    ):
+        monkeypatch.setattr(
+            "core.translator.get_glossary_for_pair",
+            lambda source_language, target_language: {"jackpot": "bote"},
+        )
+
+        req = TranslateRequest(
+            text="jackpot",
+            source_language="english",
+            target_language="spanish-mx",
+        )
+        result = translate_sync(req)
+
+        assert result.translated_text == "bote"
+        mock_get_client.assert_not_called()

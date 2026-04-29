@@ -2,32 +2,39 @@
 
 This project has been designed to run with Oracle OCI Stacks Resource Manager. Nevertheless you can use it on another place but you have to uncomment some security variables needed outside of OCI Stacks Resource Manager. 
 
-## Deploy to Oracle Cloud
+## Deploy to Oracle Cloud (but check prerequisites before)
 
 Use the button below to open OCI Resource Manager with the packaged stack archive for this option:
 
 [![Deploy to Oracle Cloud](https://oci-resourcemanager-plugin.plugins.oci.oraclecloud.com/latest/deploy-to-oracle-cloud.svg)](https://cloud.oracle.com/resourcemanager/stacks/create?zipUrl=https://github.com/brnil6/oci-translation-app/releases/download/v1.0.0/ocitranslator.zip)
 
-The button uses the archive published at `terraform/option_c_xcontainers/ocitranslator.zip` on the `main` branch.
+The button uses the archive published at `terraform/option_c_xcontainers/ocitranslator.zip` on the `devkris` branch.
 
 ## Prerequisites
 
 Before Starting you need to create a Secret in Oracle OCI Vault for being able to connect to the OCI Registry where your docker images for Container Instances are stored.
 
-1) Create the secret. It is a JSON String like below : 
+1) Create your Auth Token that will allow you to login in the OCIR Registry (The place where you will upload your docker image containing the translator agent)
+
+
+2) Create the secret. It is a JSON String like below : 
 
 {
 "username": "charles-foster-kane",
-"password": "rosebud"
+"password": "<Your_Auth_Token>"
 } 
 
-2) Create a Dynamic Group for Container Instance in your compratment
+3) Create a Dynamic Group for Container Instance in your compratment [Because Container Instance must be able to read the secret]
    
-"Any {resource.type = 'computecontainerinstance', resource.compartment.id = 'ocid1.compartment.oc1..aaaaaaaax6vcsmyeticnpfvvixqk5lyqgihqbjvhcxfakuruoyv4dr4utq7q'}"
+"Any {resource.type = 'computecontainerinstance', resource.compartment.id = 'ocid1.compartment.oc1..aaaa************qk5lyqgihqbjvhcxfakuruoyv4dr4utq7q'}"
 
-3) Create a Policy to allow Container Instance read Secret
+4) Create a Policy to allow Container Instance read Secret
 
-allow dynamic-group <dynamic-group-name> to read secret-bundles in tenancy
+allow dynamic-group <dynamic-group-name> to read secret-bundles in compartment <compartment-name>
+
+5) Create a Virtual Cloud Nework for your Container Instances. Use the default Action/Start the VCN Wizard on the UI Console after going to VCN. You will then create a public subnet that will be used by the Load Balancer and the private subnet that will be used by the Container Instances. 
+
+6) Go to the public subnet and the private subnet to add the port 8000 as in ingress rule in the security list of the 2 subnets.
 
 ## Create the Stack
 
@@ -45,6 +52,7 @@ You can look at the variables and see :
   - public_subnet_ocid
   - ci_image_url
   - ci_registry_secret (ocid)
+  - and so on...
 
 ## Scale
 

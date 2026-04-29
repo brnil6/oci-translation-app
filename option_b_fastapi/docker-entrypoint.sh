@@ -33,4 +33,4 @@ EOF
 
 export OCI_CONFIG_FILE=/root/.oci/config
 
-exec uvicorn option_b_fastapi.main:app --host 0.0.0.0 --port 8000 --workers "${UVICORN_WORKERS:-8}"
+exec uvicorn option_b_fastapi.main:app --host 0.0.0.0 --port 8000 --workers "${UVICORN_WORKERS:-2}"
