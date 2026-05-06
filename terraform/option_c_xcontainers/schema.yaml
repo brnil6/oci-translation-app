@@ -17,6 +17,13 @@ variableGroups:
       - private_subnet_ocid
       - public_subnet_ocid
 
+  - title: "OCI API Credentials"
+    variables:
+      - tenancy_ocid
+      - user_ocid
+      - fingerprint
+      - private_api_key
+
   - title: "Container Instances"
     variables:
       - ci_count
@@ -67,6 +74,31 @@ variables:
     dependsOn:
       compartmentId: ${compartment_ocid}
     required: true
+
+  tenancy_ocid:
+    title: "Tenancy OCID"
+    description: "OCI tenancy OCID passed to the container runtime."
+    type: string
+    required: true
+
+  user_ocid:
+    title: "User OCID"
+    description: "OCI user OCID passed to the container runtime."
+    type: string
+    required: true
+
+  fingerprint:
+    title: "API Key Fingerprint"
+    description: "Fingerprint of the OCI API key passed to the container runtime."
+    type: string
+    required: true
+
+  private_api_key:
+    title: "Private API Key"
+    description: "OCI API private key content passed to the container runtime."
+    type: text
+    required: true
+    sensitive: true
 
   ci_count:
     title: "Container Instance Count"
